@@ -24,7 +24,7 @@ class ButtonOnFloor {
 class Elevator {
   elevatorMove = false;
 
-  elevatorFloor: number;
+  elevatorFloor: number = 1;
   constructor(maxFloors: number) {
     this.elevatorFloor = maxFloors;
   }
@@ -86,8 +86,15 @@ class GameRender {
     stage.addChild(line);
   }
   //Отрисовка этажей
-  drawButon(x: number, y: number, stage: PIXI.Container, func: () => void) {
+  drawButon(
+    x: number,
+    y: number,
+    stage: PIXI.Container,
+    func: () => void,
+    lvlButton?: number
+  ) {
     const graphics = new PIXI.Graphics();
+    let levelButton = lvlButton;
     let button = graphics
       .beginFill()
       .lineStyle(4, 0xca0020)
@@ -132,15 +139,18 @@ class App {
     if (this.elevatorObj.elevatorFloor === 1) return;
     while (this.elevatorObj.elevatorFloor > 1) {
       console.log("down", this.elevatorObj.elevatorFloor);
+
       if (this.buttons.levelButton[this.elevatorObj.elevatorFloor]) {
-        this.buttons.rendredButton[this.elevatorObj.elevatorFloor].clear();
+        let neededFloor = this.elevatorObj.elevatorFloor;
+        console.log(this.buttons.rendredButton, 123);
+        this.buttons.rendredButton[neededFloor].clear();
 
         this.gameRender.drawButon(
           100,
-          (this.buttons.maxFloor - this.elevatorObj.elevatorFloor + 1) * 105 +
-            2,
+          (this.buttons.maxFloor - neededFloor + 1) * 105 + 2,
           this.stage,
-          () => this.btnFloorPressed(this.elevatorObj.elevatorFloor + 1)
+          () => this.btnFloorPressed(neededFloor),
+          neededFloor
         );
         await delay(500);
       }
@@ -177,7 +187,6 @@ class App {
 
   async btnFloorPressed(floor: number) {
     this.buttons.elevatorCall(floor);
-
     if (!this.elevatorObj.elevatorMove) {
       // необходимо для выполнения логики только одного лифта
       this.elevatorObj.elevatorMove = true;
