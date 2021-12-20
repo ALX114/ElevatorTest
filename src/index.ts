@@ -4,7 +4,9 @@ import { width, height } from "./constant";
 const delay = async (ms) =>
   await new Promise((resolve) => setTimeout(resolve, ms));
 
+//логика кнопок лифта
 class ButtonOnFloor {
+  rendredButton: PIXI.Container[] = [];
   levelButton: object = {};
   maxFloor: number = 0;
   constructor() {}
@@ -18,7 +20,7 @@ class ButtonOnFloor {
     this.maxFloor++;
   }
 }
-
+//логика работы лифта
 class Elevator {
   elevatorMove = false;
 
@@ -34,7 +36,7 @@ class Elevator {
     this.elevatorFloor++;
   }
 }
-
+//логика рендера
 class GameRender {
   public pixiApp: PIXI.Application;
   public stage: PIXI.Container;
@@ -61,38 +63,18 @@ class GameRender {
     this.elevator.y = y;
   }
   async moveOneFloorUp() {
-    // console.log("ydown", this.elevator.pivot.y);
-    // let y2 = this.elevator.pivot.y + 105;
-    // let clr = setInterval(() => {
-    //   console.log("y1down", this.elevator.pivot.y, clr);
-    //   this.elevator.pivot.y++;
-    //   if (this.elevator.pivot.y >= y2) {
-    //     clearInterval(clr);
-    //   }
-    // }, 30);
-    // setTimeout(() => {
-    //   console.log(200);
-    // }, 3000);
     for (let y = 0; y < 105; y++)
       await delay(30).then(() => {
         this.elevator.y--;
       });
   }
   async moveOneFloorDown() {
-    // console.log("ydown", this.elevator.pivot.y);
-    // let y2 = this.elevator.pivot.y - 105;
-    // let clr = setInterval(() => {
-    //   console.log("y1down", this.elevator.pivot.y, clr);
-    //   this.elevator.pivot.y--;
-    //   if (this.elevator.pivot.y <= y2) {
-    //     clearInterval(clr);
-    //   }
-    // }, 30);
     for (let y = 0; y < 105; y++)
       await delay(30).then(() => {
         this.elevator.y++;
       });
   }
+  //Отрисовка этажей
   drawLevels(x: number, y: number, stage: PIXI.Container) {
     const graphics = new PIXI.Graphics();
     let line = graphics
@@ -103,6 +85,7 @@ class GameRender {
       .endFill();
     stage.addChild(line);
   }
+  //Отрисовка этажей
   drawButon(x: number, y: number, stage: PIXI.Container, func: () => void) {
     const graphics = new PIXI.Graphics();
     let button = graphics
@@ -113,23 +96,11 @@ class GameRender {
     button.interactive = true;
     button.addListener("click", func);
     stage.addChild(button);
+    return button;
   }
 }
 
-/*this.pixiApp = this.initPixiApp();
-    this.stage = this.pixiApp.stage;
-    this.drawElevator(this.stage, 0, 5);
-
-    for (let i = 0; i < 5; i++) {
-      let x = 100;
-      let y = i * 105 + 2;
-      let btnFunc: () => void = () => this.buttons.elevatorCall(i);
-      this.drawLevels(x, y, this.stage);
-      this.drawButon(x, y, this.stage, btnFunc);
-    }
-    
-    */
-
+//сборка всей логики
 class App {
   gameRender = new GameRender();
   pixiApp: PIXI.Application;
@@ -147,8 +118,7 @@ class App {
     this.buttons.elevatorCall(floor);
 
     let floors: Array<string> = Object.keys(this.buttons.levelButton);
-    // console.log(floor, this.buttons.maxFloor, this.elevatorObj.elevatorFloor); //для дебага
-    // return;
+    //Логика движения вниз
     async function elevatorMoveDown() {
       floors = Object.keys(buttonLogic.levelButton);
 
@@ -163,7 +133,7 @@ class App {
       }
       dir = true;
     }
-
+    //Логика движения вверх
     async function elevatorMoveUp() {
       floors = Object.keys(buttonLogic.levelButton);
       let maxFloor = Math.max.apply(null, floors);
@@ -176,6 +146,7 @@ class App {
       }
       dir = false;
     }
+    //Инициалиация лифта
     function elevatorInit() {
       floors = Object.keys(buttonLogic.levelButton);
       let maxFloor = Math.max.apply(null, floors);
@@ -185,13 +156,6 @@ class App {
       } else dir = false;
     }
     function directionLogic() {
-      let maxFloor = Math.min.apply(null, floors);
-      // if (
-      //   elevatorLogic.elevatorFloor === buttonLogic.maxFloor ||
-      //   elevatorLogic.elevatorFloor === 0
-      // ) {
-      //   dir = !dir;
-      // }
       if (elevatorLogic.elevatorFloor > buttonLogic.maxFloor) {
         dir = true;
       }
@@ -202,13 +166,14 @@ class App {
 
     console.log("elevFloors", this.buttons.levelButton);
     if (!this.elevatorObj.elevatorMove) {
+      // необходимо для выполнения логики только одного лифта
       this.elevatorObj.elevatorMove = true;
 
       console.log("init", "start");
       elevatorInit();
       while (floors.length !== 0) {
         directionLogic();
-        dir ? await elevatorMoveUp() : await elevatorMoveDown();
+        dir ? await elevatorMoveUp() : await elevatorMoveDown(); // выбор направления движения
       }
       this.elevatorObj.elevatorMove = false;
       console.log("init", "stop");
@@ -228,7 +193,12 @@ class App {
       if (i === maxFloors) {
         this.gameRender.drawLevels(0, y + 105, this.stage);
       }
-      this.gameRender.drawButon(x, y, this.stage, btnFunc);
+      this.buttons.rendredButton[maxFloors - i + 1] = this.gameRender.drawButon(
+        x,
+        y,
+        this.stage,
+        btnFunc
+      );
       this.buttons.maxFloorCounter();
     }
     console.log("max", this.buttons.maxFloor);
