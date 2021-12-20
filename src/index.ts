@@ -4,7 +4,7 @@ import { width, height } from "./constant";
 const delay = async (ms) =>
   await new Promise((resolve) => setTimeout(resolve, ms));
 
-//логика кнопок лифта
+//логика кнопок на этаже
 class ButtonOnFloor {
   rendredButton: PIXI.Container[] = [];
   levelButton: object = {};
