@@ -179,7 +179,7 @@ class App {
       console.log("init", "stop");
     }
   }
-
+  //сборка всей логики лифта
   constructor() {
     this.pixiApp = this.gameRender.initPixiApp();
     this.stage = this.pixiApp.stage;
