@@ -16,6 +16,7 @@ class ButtonOnFloor {
   elevatorOff(floor: number) {
     delete this.levelButton[floor];
   }
+  //Отсчет количества этажей
   maxFloorCounter() {
     this.maxFloor++;
   }
@@ -136,23 +137,25 @@ class App {
   async elevatorMoveDown() {
     this.floors = Object.keys(this.buttons.levelButton);
     //починить этот кусок потом
-    if (this.elevatorObj.elevatorFloor === 1 && this.buttons.levelButton[this.elevatorObj.elevatorFloor]) {
-      
+    if (
+      this.elevatorObj.elevatorFloor === 1 &&
+      this.buttons.levelButton[this.elevatorObj.elevatorFloor]
+    ) {
       this.buttons.elevatorOff(this.elevatorObj.elevatorFloor);
 
       let neededFloor = this.elevatorObj.elevatorFloor;
-        this.buttons.rendredButton[neededFloor].clear();
+      this.buttons.rendredButton[neededFloor].clear();
 
-        this.gameRender.drawButon(
-          100,
-          (this.buttons.maxFloor - neededFloor + 1) * 105 + 2,
-          this.stage,
-          () => this.btnFloorPressed(neededFloor),
-          neededFloor
-        );
-        await delay(1500);
-      return
-    };
+      this.gameRender.drawButon(
+        100,
+        (this.buttons.maxFloor - neededFloor + 1) * 105 + 2,
+        this.stage,
+        () => this.btnFloorPressed(neededFloor),
+        neededFloor
+      );
+      await delay(1500);
+      return;
+    }
     while (this.elevatorObj.elevatorFloor > 1) {
       console.log("down", this.elevatorObj.elevatorFloor);
 
@@ -184,11 +187,13 @@ class App {
     let maxFloor = Math.max.apply(null, this.floors);
     while (this.elevatorObj.elevatorFloor < maxFloor) {
       this.floors = Object.keys(this.buttons.levelButton);
-      maxFloor = Math.max.apply(null, this.floors);
       console.log("up", this.elevatorObj.elevatorFloor);
 
       await this.gameRender.moveOneFloorUp();
       this.elevatorObj.moveElevatorUp();
+      this.floors = Object.keys(this.buttons.levelButton);
+      
+      maxFloor = Math.max.apply(null, this.floors);
     }
     this.dir = false;
   }
