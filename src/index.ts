@@ -10,7 +10,7 @@ class ButtonOnFloor {
   levelButton: object = {};
   maxFloor: number = 0;
   constructor() {}
-  elevatorCall(floor: number) {
+   elevatorCall(floor: number) {
     this.levelButton[floor] = true;
   }
   elevatorOff(floor: number) {
@@ -32,7 +32,9 @@ class Elevator {
   moveElevatorDown() {
     this.elevatorFloor--;
   }
-
+  elevatorMoveInvert(){
+    this.elevatorMove = !this.elevatorMove
+  }
   moveElevatorUp() {
     this.elevatorFloor++;
   }
@@ -136,7 +138,7 @@ class App {
   //Логика движения вниз
   async elevatorMoveDown() {
     this.floors = Object.keys(this.buttons.levelButton);
-    //починить этот кусок потом
+    //проверка первого этажа
     if (
       this.elevator.elevatorFloor === 1 &&
       this.buttons.levelButton[this.elevator.elevatorFloor]
@@ -156,22 +158,23 @@ class App {
       await delay(1500);
       return;
     }
+    //цикл движения лифта до первого этажа
     while (this.elevator.elevatorFloor > 1) {
       console.log("down", this.elevator.elevatorFloor);
 
       if (this.buttons.levelButton[this.elevator.elevatorFloor]) {
-        let neededFloor = this.elevator.elevatorFloor;
-        console.log(this.buttons.rendredButton, 123);
-        this.buttons.rendredButton[neededFloor].clear();
-
-        this.gameRender.drawButon(
-          100,
-          (this.buttons.maxFloor - neededFloor + 1) * 105 + 2,
-          this.stage,
-          () => this.btnFloorPressed(neededFloor),
-          neededFloor
-        );
+        let elevatorFloor = this.elevator.elevatorFloor;
         await delay(1500);
+        this.buttons.rendredButton[elevatorFloor].clear();
+
+        this.buttons.rendredButton[elevatorFloor] = this.gameRender.drawButon(
+          100,
+          (this.buttons.maxFloor - elevatorFloor + 1) * 105 + 2,
+          this.stage,
+          () => this.btnFloorPressed(elevatorFloor),
+          elevatorFloor
+        );
+        
       }
       this.buttons.elevatorOff(this.elevator.elevatorFloor);
 
@@ -206,12 +209,12 @@ class App {
       this.dir = true;
     } else this.dir = false;
   }
-
+  //нажатие на кнопку лифта запускает цикл движения только при первом нажатии
   async btnFloorPressed(floor: number) {
     this.buttons.elevatorCall(floor);
     if (!this.elevator.elevatorMove) {
       // необходимо для выполнения логики только одного лифта
-      this.elevator.elevatorMove = true;
+      this.elevator.elevatorMoveInvert();
 
       console.log("init", "start");
       this.elevatorInit();
@@ -219,7 +222,7 @@ class App {
         // directionLogic();
         this.dir ? await this.elevatorMoveUp() : await this.elevatorMoveDown(); // выбор направления движения
       }
-      this.elevator.elevatorMove = false;
+      this.elevator.elevatorMoveInvert()
       console.log("init", "end");
     }
   }
