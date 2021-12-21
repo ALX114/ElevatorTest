@@ -41,7 +41,7 @@ class Elevator {
 class GameRender {
   public pixiApp: PIXI.Application;
   public stage: PIXI.Graphics;
-  private elevator: PIXI.Container;
+  private elevatorContainer: PIXI.Container;
   constructor() {}
   initPixiApp() {
     const pixiApp = new PIXI.Application({
@@ -56,23 +56,23 @@ class GameRender {
     const graphics = new PIXI.Graphics();
     let rect = graphics.beginFill(0xaa33bb).drawRect(x, y, 100, 100).endFill();
 
-    this.elevator = rect;
+    this.elevatorContainer = rect;
     stage.addChild(rect);
   }
   moveElevator(x: number, y: number) {
-    this.elevator.x = x;
-    this.elevator.y = y;
+    this.elevatorContainer.x = x;
+    this.elevatorContainer.y = y;
   }
   async moveOneFloorUp() {
     for (let y = 0; y < 105; y++)
       await delay(30).then(() => {
-        this.elevator.y--;
+        this.elevatorContainer.y--;
       });
   }
   async moveOneFloorDown() {
     for (let y = 0; y < 105; y++)
       await delay(30).then(() => {
-        this.elevator.y++;
+        this.elevatorContainer.y++;
       });
   }
   //Отрисовка этажей
@@ -124,12 +124,12 @@ class GameRender {
 
 //сборка всей логики
 class App {
-  gameRender = new GameRender();
+  gameRender:GameRender = new GameRender();
   pixiApp: PIXI.Application;
   stage: PIXI.Container;
-  elevator: PIXI.Container;
+  elevatorContainer: PIXI.Container;
   buttons: ButtonOnFloor = new ButtonOnFloor();
-  elevatorObj: Elevator;
+  elevator: Elevator;
   dir: boolean = false;
   floors: Array<string> = Object.keys(this.buttons.levelButton);
 
@@ -138,12 +138,12 @@ class App {
     this.floors = Object.keys(this.buttons.levelButton);
     //починить этот кусок потом
     if (
-      this.elevatorObj.elevatorFloor === 1 &&
-      this.buttons.levelButton[this.elevatorObj.elevatorFloor]
+      this.elevator.elevatorFloor === 1 &&
+      this.buttons.levelButton[this.elevator.elevatorFloor]
     ) {
-      this.buttons.elevatorOff(this.elevatorObj.elevatorFloor);
+      this.buttons.elevatorOff(this.elevator.elevatorFloor);
 
-      let neededFloor = this.elevatorObj.elevatorFloor;
+      let neededFloor = this.elevator.elevatorFloor;
       this.buttons.rendredButton[neededFloor].clear();
 
       this.gameRender.drawButon(
@@ -156,11 +156,11 @@ class App {
       await delay(1500);
       return;
     }
-    while (this.elevatorObj.elevatorFloor > 1) {
-      console.log("down", this.elevatorObj.elevatorFloor);
+    while (this.elevator.elevatorFloor > 1) {
+      console.log("down", this.elevator.elevatorFloor);
 
-      if (this.buttons.levelButton[this.elevatorObj.elevatorFloor]) {
-        let neededFloor = this.elevatorObj.elevatorFloor;
+      if (this.buttons.levelButton[this.elevator.elevatorFloor]) {
+        let neededFloor = this.elevator.elevatorFloor;
         console.log(this.buttons.rendredButton, 123);
         this.buttons.rendredButton[neededFloor].clear();
 
@@ -173,10 +173,10 @@ class App {
         );
         await delay(1500);
       }
-      this.buttons.elevatorOff(this.elevatorObj.elevatorFloor);
+      this.buttons.elevatorOff(this.elevator.elevatorFloor);
 
       await this.gameRender.moveOneFloorDown();
-      this.elevatorObj.moveElevatorDown();
+      this.elevator.moveElevatorDown();
     }
     this.dir = true;
   }
@@ -185,14 +185,14 @@ class App {
   async elevatorMoveUp() {
     this.floors = Object.keys(this.buttons.levelButton);
     let maxFloor = Math.max.apply(null, this.floors);
-    while (this.elevatorObj.elevatorFloor < maxFloor) {
+    while (this.elevator.elevatorFloor < maxFloor) {
       this.floors = Object.keys(this.buttons.levelButton);
-      console.log("up", this.elevatorObj.elevatorFloor);
+      console.log("up", this.elevator.elevatorFloor);
 
       await this.gameRender.moveOneFloorUp();
-      this.elevatorObj.moveElevatorUp();
+      this.elevator.moveElevatorUp();
       this.floors = Object.keys(this.buttons.levelButton);
-      
+
       maxFloor = Math.max.apply(null, this.floors);
     }
     this.dir = false;
@@ -202,16 +202,16 @@ class App {
   elevatorInit() {
     this.floors = Object.keys(this.buttons.levelButton);
     let maxFloor = Math.max.apply(null, this.floors);
-    if (this.elevatorObj.elevatorFloor < maxFloor) {
+    if (this.elevator.elevatorFloor < maxFloor) {
       this.dir = true;
     } else this.dir = false;
   }
 
   async btnFloorPressed(floor: number) {
     this.buttons.elevatorCall(floor);
-    if (!this.elevatorObj.elevatorMove) {
+    if (!this.elevator.elevatorMove) {
       // необходимо для выполнения логики только одного лифта
-      this.elevatorObj.elevatorMove = true;
+      this.elevator.elevatorMove = true;
 
       console.log("init", "start");
       this.elevatorInit();
@@ -219,7 +219,7 @@ class App {
         // directionLogic();
         this.dir ? await this.elevatorMoveUp() : await this.elevatorMoveDown(); // выбор направления движения
       }
-      this.elevatorObj.elevatorMove = false;
+      this.elevator.elevatorMove = false;
       console.log("init", "end");
     }
   }
@@ -229,15 +229,15 @@ class App {
     this.stage = this.pixiApp.stage;
     this.gameRender.drawElevator(this.stage, 0, 110);
     let maxFloors = 5;
-    for (let i = maxFloors; i > 0; i--) {
+    for (let index = maxFloors; index > 0; index--) {
       let x = 100;
-      let y = i * 105 + 2;
-      let btnFunc: () => void = () => this.btnFloorPressed(maxFloors - i + 1);
+      let y = index * 105 + 2;
+      let btnFunc: () => void = () => this.btnFloorPressed(maxFloors - index + 1);
       this.gameRender.drawLevels(x, y, this.stage);
-      if (i === maxFloors) {
+      if (index === maxFloors) {
         this.gameRender.drawLevels(0, y + 105, this.stage);
       }
-      this.buttons.rendredButton[maxFloors - i + 1] = this.gameRender.drawButon(
+      this.buttons.rendredButton[maxFloors - index + 1] = this.gameRender.drawButon(
         x,
         y,
         this.stage,
@@ -245,7 +245,7 @@ class App {
       );
       this.buttons.maxFloorCounter();
     }
-    this.elevatorObj = new Elevator(this.buttons.maxFloor);
+    this.elevator = new Elevator(this.buttons.maxFloor);
   }
 }
 
